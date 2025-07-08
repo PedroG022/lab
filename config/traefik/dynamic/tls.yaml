@@ -1,0 +1,4 @@
+tls:
+  certificates:
+    - certFile: /certs/_wildcard.box.local.pem
+      keyFile: /certs/_wildcard.box.local-key.pem

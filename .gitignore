@@ -1,0 +1,31 @@
+# General
+*.log
+*.tmp
+*.swp
+*.bak
+*.old
+*.orig
+
+# OS metadata
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# Editor / IDE settings
+.vscode/
+.idea/
+*.code-workspace
+
+# Docker volumes / container data
+config/adguard/workdir/*
+
+# Traefik certificates
+config/traefik/certs/
+
+# Compose override examples (optional)
+docker-compose.override.yml
+
+*.env
+
+AdguardHome.yaml
