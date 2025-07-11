@@ -23,6 +23,15 @@ config/adguard/workdir/*
 # Traefik certificates
 config/traefik/certs/
 
+# Headscale
+config/headscale/lib
+config/headscale/run
+config/headscale/config/config.yaml
+
+# Headplane
+config/headplane/config.yaml
+
+
 # Compose override examples (optional)
 docker-compose.override.yml
 
