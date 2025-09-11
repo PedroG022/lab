@@ -30,6 +30,7 @@ config/headscale/config/config.yaml
 
 # Headplane
 config/headplane/config.yaml
+config/headplane/headplane-data/
 
 
 # Compose override examples (optional)
