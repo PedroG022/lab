@@ -71,6 +71,8 @@ services:
       image: adguard/adguardhome
       restart: unless-stopped
 
+      profiles: ["adguard"]
+
       ports:
         - "53:53/tcp"
         - "53:53/udp"
@@ -108,6 +110,8 @@ services:
       image: portainer/portainer-ce:lts
       restart: always
 
+      profiles: ["portainer"]
+
       networks:
           - proxy
 
@@ -135,6 +139,8 @@ services:
     image: glanceapp/glance
     restart: unless-stopped
 
+    profiles: ["glance"]
+
     networks:
       - proxy
 
@@ -159,6 +165,8 @@ services:
       container_name: headplane
       image: ghcr.io/tale/headplane:${HEADPLANE_VERSION}
       restart: unless-stopped
+
+      profiles: ['headscale']
 
       networks:
         - proxy
@@ -196,6 +204,8 @@ services:
     container_name: headscale
     image: docker.io/headscale/headscale:${HEADSCALE_VERSION}
     restart: unless-stopped
+
+    profiles: ['headscale']
 
     ports:
       - "127.0.0.1:8080:8080"
