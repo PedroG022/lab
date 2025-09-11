@@ -6,4 +6,4 @@ Screenshots
 
 ---
 
-![Glance](screenshots/home.png)
+![Glance](docs/screenshots/home.png)
