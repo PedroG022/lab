@@ -15,6 +15,8 @@ up-headscale:
 down-headscale:
 	docker compose --env-file .env -f compose/infra/docker-compose.yml --profile "headscale" down --remove-orphans
 
+restart-headscale: down-headscale up-headscale
+
 up-infra:
 	docker compose --env-file .env -f compose/infra/docker-compose.yml --profile "*" up -d
 
