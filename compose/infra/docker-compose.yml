@@ -63,7 +63,7 @@ services:
         - "traefik.http.routers.dashboard.tls=true"
   
         # Basic-auth middleware
-        - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$UmbJgI5n$$Vs4wFPKFnPFGO23NLcRab1"
+        - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_PASSWORD}"
         - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
 
   adguardhome:
@@ -95,7 +95,13 @@ services:
         - "traefik.http.routers.adguard.entrypoints=websecure"
         - "traefik.http.routers.adguard.tls=true"
 
-        - "traefik.http.services.adguard.loadbalancer.server.port=8081"
+        - "traefik.http.services.adguard.loadbalancer.server.port=80"
+
+        - "traefik.http.routers.adguard-setup.rule=Host(`adguard-setup.${HOST_DOMAIN}`)"
+        - "traefik.http.routers.adguard-setup.entrypoints=websecure"
+        - "traefik.http.routers.adguard-setup.tls=true"
+
+        - "traefik.http.services.adguard-setup.loadbalancer.server.port=3000"
 
   portainer-ce:
       container_name: portainer
@@ -149,39 +155,6 @@ services:
       - "traefik.http.routers.glance.entrypoints=websecure"
       - "traefik.http.routers.glance.tls=true"
 
-  headscale:
-    container_name: headscale
-    image: docker.io/headscale/headscale:${HEADSCALE_VERSION}
-    restart: unless-stopped
-
-    ports:
-      - "127.0.0.1:8080:8080"
-
-    networks:
-      - proxy
-
-    volumes:
-      - ${LAB_DIR}/config/headscale/config:/etc/headscale
-      - ${LAB_DIR}/config/headscale/lib:/var/lib/headscale
-      - ${LAB_DIR}/config/headscale/run:/var/run/headscale
-
-    command: serve
-
-    labels:
-      - "glance.name=Headscale"
-      - "glance.icon=di:headscale"
-      - "glance.description=Headscale"
-      - "glance.category=infra"
-
-      - "me.tale.headplane.target=headscale"
-
-      - "traefik.enable=true"
-      - "traefik.http.services.headscale.loadbalancer.server.port=8080"
-      - "traefik.http.routers.headscale.rule=Host(`headscale.${HOST_DOMAIN}`)"
-      - "traefik.http.routers.headscale.entrypoints=websecure"
-      - "traefik.http.routers.headscale.tls=true"
-
-
   headplane:
       container_name: headplane
       image: ghcr.io/tale/headplane:${HEADPLANE_VERSION}
@@ -206,6 +179,7 @@ services:
 
       labels:
         - "glance.name=Headplane"
+        - "glance.id=headplane"
         - "glance.icon=si:headlessui"
         - "glance.url=https://headplane.${HOST_DOMAIN}/admin"
         - "glance.description=Headplane"
@@ -217,6 +191,39 @@ services:
         - "traefik.http.routers.headplane.rule=Host(`headplane.${HOST_DOMAIN}`)"
         - "traefik.http.routers.headplane.entrypoints=websecure"
         - "traefik.http.routers.headplane.tls=true"
+
+  headscale:
+    container_name: headscale
+    image: docker.io/headscale/headscale:${HEADSCALE_VERSION}
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    networks:
+      - proxy
+
+    volumes:
+      - ${LAB_DIR}/config/headscale/config:/etc/headscale
+      - ${LAB_DIR}/config/headscale/lib:/var/lib/headscale
+      - ${LAB_DIR}/config/headscale/run:/var/run/headscale
+
+    command: serve
+
+    labels:
+      - "glance.name=Headscale"
+      - "glance.icon=di:headscale"
+      - "glance.parent=headplane"
+      - "glance.description=Headscale"
+      - "glance.category=infra"
+
+      - "me.tale.headplane.target=headscale"
+
+      - "traefik.enable=true"
+      - "traefik.http.services.headscale.loadbalancer.server.port=8080"
+      - "traefik.http.routers.headscale.rule=Host(`headscale.${HOST_DOMAIN}`)"
+      - "traefik.http.routers.headscale.entrypoints=websecure"
+      - "traefik.http.routers.headscale.tls=true"
 
 volumes:
     portainer_data:
