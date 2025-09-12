@@ -2,30 +2,52 @@
 
 include .env
 
+.PHONY: up down
+
+DOCKER_INFRA = docker compose --env-file .env -f compose/infra/docker-compose.yml
+DOCKER_INFRA_PROD = ${DOCKER_INFRA} -f compose/infra/docker-compose.prod.yml
+
 default:
 	@echo "Usage:"
+	@echo "  make up-infra-prod      Start infra stack (PROD)"
+	@echo "  make down-infra-prod    Stop infra stack (PROD)"
+	@echo "  make logs-infra-prod    Tail logs (PROD)"
+	@echo "  make ps-infra-prod      Show containers (PROD)"
+	@echo "  										"
 	@echo "  make up-infra      Start infra stack"
 	@echo "  make down-infra    Stop infra stack"
 	@echo "  make logs-infra    Tail logs"
 	@echo "  make ps-infra      Show containers"
 
-up-infra:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml up -d
+# Prod environment
 
 up-infra-prod:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml -f compose/infra/docker-compose.prod.yml up -d
-
-down-infra:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml down --remove-orphans
+	${DOCKER_INFRA_PROD} up -d
 
 down-infra-prod:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml -f compose/infra/docker-compose.prod.yml down --remove-orphans
+	${DOCKER_INFRA_PROD} down --remove-orphans
+
+logs-infra-prod:
+	${DOCKER_INFRA_PROD} logs -f
+
+ps-infra-prod:
+	${DOCKER_INFRA_PROD} ps
+
+restart-infra-prod: down-infra-prod up-infra-prod
+
+# Local environment
+
+up-infra:
+	${DOCKER_INFRA} up -d
+
+down-infra:
+	${DOCKER_INFRA} down --remove-orphans
 
 logs-infra:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml logs -f
+	${DOCKER_INFRA} logs -f
 
 ps-infra:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml ps
+	${DOCKER_INFRA} ps
 
 restart-infra: down-infra up-infra
 
