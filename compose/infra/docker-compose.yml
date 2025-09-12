@@ -105,6 +105,10 @@ services:
       - "traefik.http.routers.headplane.entrypoints=websecure"
       - "traefik.http.routers.headplane.tls=true"
 
+    depends_on:
+        headscale:
+            condition: service_healthy
+
   headscale:
     container_name: headscale
     image: docker.io/headscale/headscale:${HEADSCALE_VERSION}
@@ -137,6 +141,12 @@ services:
       - "traefik.http.routers.headscale.rule=Host(`headscale.${HOST_DOMAIN}`)"
       - "traefik.http.routers.headscale.entrypoints=websecure"
       - "traefik.http.routers.headscale.tls=true"
+
+    healthcheck:
+      test: ["CMD", "headscale", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   portainer_data:
