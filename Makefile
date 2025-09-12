@@ -12,8 +12,14 @@ default:
 up-infra:
 	docker compose --env-file .env -f compose/infra/docker-compose.yml up -d
 
+up-infra-prod:
+	docker compose --env-file .env -f compose/infra/docker-compose.yml -f compose/infra/docker-compose.prod.yml up -d
+
 down-infra:
 	docker compose --env-file .env -f compose/infra/docker-compose.yml down --remove-orphans
+
+down-infra-prod:
+	docker compose --env-file .env -f compose/infra/docker-compose.yml -f compose/infra/docker-compose.prod.yml down --remove-orphans
 
 logs-infra:
 	docker compose --env-file .env -f compose/infra/docker-compose.yml logs -f
