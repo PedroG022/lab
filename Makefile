@@ -2,8 +2,6 @@
 
 include .env
 
-.PHONY: up down
-
 DOCKER_INFRA = docker compose --env-file .env -f compose/infra/docker-compose.yml
 DOCKER_INFRA_PROD = ${DOCKER_INFRA} -f compose/infra/docker-compose.prod.yml
 
@@ -38,10 +36,13 @@ restart-infra-prod: down-infra-prod up-infra-prod
 # Local environment
 
 up-infra:
-	${DOCKER_INFRA} up -d
+	${DOCKER_INFRA} --profile headscale up -d
+
+up-infra-traefik:
+	${DOCKER_INFRA} --profile base up -d
 
 down-infra:
-	${DOCKER_INFRA} down --remove-orphans
+	${DOCKER_INFRA} --profile headscale down --remove-orphans
 
 logs-infra:
 	${DOCKER_INFRA} logs -f
