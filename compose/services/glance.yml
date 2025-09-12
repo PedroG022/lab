@@ -1,0 +1,27 @@
+name: "glance"
+
+services:
+  glance:
+    image: glanceapp/glance
+    container_name: glance
+    restart: unless-stopped
+
+    networks:
+      - proxy
+
+    volumes:
+      - ${LAB_DIR}/config/glance/:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    labels:
+      - "glance.name=Glance"
+      - "glance.icon=di:glance"
+      - "glance.url=https://dash.${HOST_DOMAIN}"
+      - "glance.description=Dashboard"
+      - "glance.category=infra"
+
+      - "traefik.enable=true"
+
+      - "traefik.http.routers.glance.rule=Host(`dash.${HOST_DOMAIN}`)"
+      - "traefik.http.routers.glance.entrypoints=websecure"
+      - "traefik.http.routers.glance.tls=true"

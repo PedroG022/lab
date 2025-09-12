@@ -10,6 +10,7 @@ services:
         - no-new-privileges:true
   
       ports:
+        - "80:80"
         - "443:443"
 
       networks:
@@ -19,7 +20,8 @@ services:
         - /var/run/docker.sock:/var/run/docker.sock:ro
         - ${LAB_DIR}/config/traefik/certs/:/certs:ro
         - ${LAB_DIR}/config/traefik/dynamic:/dynamic:ro
-  
+        - ${LAB_DIR}/config/traefik/letsencrypt:/letsencrypt
+
       command:
         # EntryPoints
         - "--entrypoints.web.address=:80"
@@ -27,20 +29,29 @@ services:
         - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
         - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
         - "--entrypoints.websecure.address=:443"
+
+        # TLS
         - "--entrypoints.websecure.http.tls=true"
-  
-        # Attach the static configuration tls.yaml file that contains the tls configuration settings
-        - "--providers.file.filename=/dynamic/tls.yaml"
-  
+
         # Providers
         - "--providers.docker=true"
         - "--providers.docker.exposedbydefault=false"
         - "--providers.docker.network=proxy"
-  
+
+        # File provider for extra dynamic configs
+        - "--providers.file.directory=/dynamic"
+        - "--providers.file.watch=true"
+
+        # Let's Encrypt ACME
+        - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+        - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+        - "--certificatesresolvers.myresolver.acme.email=${TRAEFIK_LETSENCRYPT_EMAIL}"
+        - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+
         # API & Dashboard
         - "--api.dashboard=true"
-        - "--api.insecure=true"
-  
+        - "--api.insecure=false"
+
         # Observability
         - "--log.level=INFO"
         - "--accesslog=true"
@@ -66,100 +77,7 @@ services:
         - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_PASSWORD}"
         - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
 
-  adguardhome:
-      container_name: adguardhome
-      image: adguard/adguardhome
-      restart: unless-stopped
-
-      profiles: ["adguard"]
-
-      ports:
-        - "53:53/tcp"
-        - "53:53/udp"
-
-      networks:
-        - proxy
-
-      volumes:
-        - ${LAB_DIR}/config/adguard/workdir:/opt/adguardhome/work
-        - ${LAB_DIR}/config/adguard/confdir:/opt/adguardhome/conf
-
-      labels:
-        - "glance.name=AdGuard Home"
-        - "glance.icon=si:adguard"
-        - "glance.url=https://adguard.${HOST_DOMAIN}"
-        - "glance.description=Network-wide ad blocking"
-        - "glance.category=infra"
-
-        - "traefik.enable=true"
-
-        - "traefik.http.routers.adguard.rule=Host(`adguard.${HOST_DOMAIN}`)"
-        - "traefik.http.routers.adguard.entrypoints=websecure"
-        - "traefik.http.routers.adguard.tls=true"
-
-        - "traefik.http.services.adguard.loadbalancer.server.port=80"
-
-        - "traefik.http.routers.adguard-setup.rule=Host(`adguard-setup.${HOST_DOMAIN}`)"
-        - "traefik.http.routers.adguard-setup.entrypoints=websecure"
-        - "traefik.http.routers.adguard-setup.tls=true"
-
-        - "traefik.http.services.adguard-setup.loadbalancer.server.port=3000"
-
-  portainer-ce:
-      container_name: portainer
-      image: portainer/portainer-ce:lts
-      restart: always
-
-      profiles: ["portainer"]
-
-      networks:
-          - proxy
-
-      volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
-          - portainer_data:/data
-
-      labels:
-          - "glance.name=Portainer"
-          - "glance.icon=si:portainer"
-          - "glance.url=https://portainer.${HOST_DOMAIN}"
-          - "glance.description=Container management"
-          - "glance.category=infra"
-
-          - "traefik.enable=true"
-    
-          - "traefik.http.routers.portainer.rule=Host(`portainer.${HOST_DOMAIN}`)"
-          - "traefik.http.routers.portainer.entrypoints=websecure"
-          - "traefik.http.routers.portainer.tls=true"
-    
-          - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-
-  glance:
-    container_name: glance
-    image: glanceapp/glance
-    restart: unless-stopped
-
-    profiles: ["glance"]
-
-    networks:
-      - proxy
-
-    volumes:
-      - ${LAB_DIR}/config/glance/:/app/config
-      - /var/run/docker.sock:/var/run/docker.sock
-
-    labels:
-      - "glance.name=Glance"
-      - "glance.icon=di:glance"
-      - "glance.url=https://dash.${HOST_DOMAIN}"
-      - "glance.description=Dashboard"
-      - "glance.category=infra"
-
-      - "traefik.enable=true"
-
-      - "traefik.http.routers.glance.rule=Host(`dash.${HOST_DOMAIN}`)"
-      - "traefik.http.routers.glance.entrypoints=websecure"
-      - "traefik.http.routers.glance.tls=true"
+        - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
 
   headplane:
       container_name: headplane
@@ -200,6 +118,9 @@ services:
         - "traefik.http.routers.headplane.entrypoints=websecure"
         - "traefik.http.routers.headplane.tls=true"
 
+        - "traefik.http.routers.headplane.tls.certresolver=myresolver"
+        - "traefik.http.routers.headplane.middlewares=dashboard-auth@docker"
+
   headscale:
     container_name: headscale
     image: docker.io/headscale/headscale:${HEADSCALE_VERSION}
@@ -234,6 +155,8 @@ services:
       - "traefik.http.routers.headscale.rule=Host(`headscale.${HOST_DOMAIN}`)"
       - "traefik.http.routers.headscale.entrypoints=websecure"
       - "traefik.http.routers.headscale.tls=true"
+
+      - "traefik.http.routers.headscale.tls.certresolver=myresolver"
 
 volumes:
     portainer_data:

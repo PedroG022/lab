@@ -32,9 +32,8 @@ config/headscale/config/config.yaml
 config/headplane/config.yaml
 config/headplane/headplane-data/
 
+config/traefik/letsencrypt/
 
-# Compose override examples (optional)
-docker-compose.override.yml
 
 *.env
 
