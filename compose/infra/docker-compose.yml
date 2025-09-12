@@ -2,131 +2,113 @@ name: infra
 
 services:
   traefik:
-      container_name: traefik
-      image: traefik:v3.4
-      restart: unless-stopped
+    container_name: traefik
+    image: traefik:v3.4
+    restart: unless-stopped
 
-      security_opt:
-        - no-new-privileges:true
-  
-      ports:
-        - "80:80"
-        - "443:443"
+    security_opt:
+      - no-new-privileges:true
 
-      networks:
-        - proxy
-  
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock:ro
-        - ${LAB_DIR}/config/traefik/certs/:/certs:ro
-        - ${LAB_DIR}/config/traefik/dynamic:/dynamic:ro
-        - ${LAB_DIR}/config/traefik/letsencrypt:/letsencrypt
+    ports:
+      - "443:443"
 
-      command:
-        # EntryPoints
-        - "--entrypoints.web.address=:80"
-        - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-        - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-        - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
-        - "--entrypoints.websecure.address=:443"
+    networks:
+      - proxy
 
-        # TLS
-        - "--entrypoints.websecure.http.tls=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${LAB_DIR}/config/traefik/certs/:/certs:ro
+      - ${LAB_DIR}/config/traefik/dynamic:/dynamic:ro
 
-        # Providers
-        - "--providers.docker=true"
-        - "--providers.docker.exposedbydefault=false"
-        - "--providers.docker.network=proxy"
+    command:
+      # EntryPoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
 
-        # File provider for extra dynamic configs
-        - "--providers.file.directory=/dynamic"
-        - "--providers.file.watch=true"
+      # TLS
+      - "--entrypoints.websecure.http.tls=true"
 
-        # Let's Encrypt ACME
-        - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-        - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-        - "--certificatesresolvers.myresolver.acme.email=${TRAEFIK_LETSENCRYPT_EMAIL}"
-        - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # Providers
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=proxy"
 
-        # API & Dashboard
-        - "--api.dashboard=true"
-        - "--api.insecure=false"
+      # File provider for extra dynamic configs
+      - "--providers.file.directory=/dynamic"
+      - "--providers.file.watch=true"
 
-        # Observability
-        - "--log.level=INFO"
-        - "--accesslog=true"
-        - "--metrics.prometheus=false"
-  
-      labels:
-        - "glance.name=Traefik"
-        - "glance.icon=si:traefikproxy"
-        - "glance.url=https://traefik.${HOST_DOMAIN}"
-        - "glance.description=Reverse proxy"
-        - "glance.category=infra"
+      # API & Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
 
-        # Enable self-routing
-        - "traefik.enable=true"
-  
-        # Dashboard router
-        - "traefik.http.routers.dashboard.rule=Host(`traefik.${HOST_DOMAIN}`)"
-        - "traefik.http.routers.dashboard.entrypoints=websecure"
-        - "traefik.http.routers.dashboard.service=api@internal"
-        - "traefik.http.routers.dashboard.tls=true"
-  
-        # Basic-auth middleware
-        - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_PASSWORD}"
-        - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
+      # Observability
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--metrics.prometheus=false"
 
-        - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+    labels:
+      - "glance.name=Traefik"
+      - "glance.icon=si:traefikproxy"
+      - "glance.url=https://traefik.${HOST_DOMAIN}"
+      - "glance.description=Reverse proxy"
+      - "glance.category=infra"
+
+      # Enable self-routing
+      - "traefik.enable=true"
+
+      # Dashboard router
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${HOST_DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+
+      # Basic-auth middleware
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_PASSWORD}"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
 
   headplane:
-      container_name: headplane
-      image: ghcr.io/tale/headplane:${HEADPLANE_VERSION}
-      restart: unless-stopped
+    container_name: headplane
+    image: ghcr.io/tale/headplane:${HEADPLANE_VERSION}
+    restart: unless-stopped
 
-      profiles: ['headscale']
+    networks:
+      - proxy
 
-      networks:
-        - proxy
+    volumes:
+      - '${LAB_DIR}/config/headplane/config.yaml:/etc/headplane/config.yaml'
+      - '${LAB_DIR}/config/headscale/config/config.yaml:/etc/headscale/config.yaml'
 
-      volumes:
-        - '${LAB_DIR}/config/headplane/config.yaml:/etc/headplane/config.yaml'
-        - '${LAB_DIR}/config/headscale/config/config.yaml:/etc/headscale/config.yaml'
+      # If using dns.extra_records in Headscale (recommended), this should
+      # match the headscale.dns_records_path in your config.yaml
+      # - './headscale-config/dns_records.json:/etc/headscale/dns_records.json'
 
-        # If using dns.extra_records in Headscale (recommended), this should
-        # match the headscale.dns_records_path in your config.yaml
-        # - './headscale-config/dns_records.json:/etc/headscale/dns_records.json'
+      # Headplane stores its data in this directory
+      - '${LAB_DIR}/config/headplane/headplane-data:/var/lib/headplane'
+      # If you are using the Docker integration, mount the Docker socket
+      # - '/var/run/docker.sock:/var/run/docker.sock:ro'
 
-        # Headplane stores its data in this directory
-        - '${LAB_DIR}/config/headplane/headplane-data:/var/lib/headplane'
+    labels:
+      - "glance.name=Headplane"
+      - "glance.id=headplane"
+      - "glance.icon=si:headlessui"
+      - "glance.url=https://headplane.${HOST_DOMAIN}/admin"
+      - "glance.description=Headplane"
+      - "glance.category=infra"
 
-        # If you are using the Docker integration, mount the Docker socket
-        # - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - "traefik.enable=true"
 
-      labels:
-        - "glance.name=Headplane"
-        - "glance.id=headplane"
-        - "glance.icon=si:headlessui"
-        - "glance.url=https://headplane.${HOST_DOMAIN}/admin"
-        - "glance.description=Headplane"
-        - "glance.category=infra"
-
-        - "traefik.enable=true"
-
-        - "traefik.http.services.headplane.loadbalancer.server.port=3000"
-        - "traefik.http.routers.headplane.rule=Host(`headplane.${HOST_DOMAIN}`)"
-        - "traefik.http.routers.headplane.entrypoints=websecure"
-        - "traefik.http.routers.headplane.tls=true"
-
-        - "traefik.http.routers.headplane.tls.certresolver=myresolver"
-        - "traefik.http.routers.headplane.middlewares=dashboard-auth@docker"
+      - "traefik.http.services.headplane.loadbalancer.server.port=3000"
+      - "traefik.http.routers.headplane.rule=Host(`headplane.${HOST_DOMAIN}`)"
+      - "traefik.http.routers.headplane.entrypoints=websecure"
+      - "traefik.http.routers.headplane.tls=true"
 
   headscale:
     container_name: headscale
     image: docker.io/headscale/headscale:${HEADSCALE_VERSION}
     restart: unless-stopped
-
-    profiles: ['headscale']
 
     ports:
       - "127.0.0.1:8080:8080"
@@ -156,11 +138,9 @@ services:
       - "traefik.http.routers.headscale.entrypoints=websecure"
       - "traefik.http.routers.headscale.tls=true"
 
-      - "traefik.http.routers.headscale.tls.certresolver=myresolver"
-
 volumes:
-    portainer_data:
-        name: portainer_data
+  portainer_data:
+    name: portainer_data
 
 networks:
   proxy:

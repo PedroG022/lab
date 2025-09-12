@@ -9,19 +9,11 @@ default:
 	@echo "  make logs-infra    Tail logs"
 	@echo "  make ps-infra      Show containers"
 
-up-headscale:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml --profile "headscale" up -d
-
-down-headscale:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml --profile "headscale" down --remove-orphans
-
-restart-headscale: down-headscale up-headscale
-
 up-infra:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml --profile "*" up -d
+	docker compose --env-file .env -f compose/infra/docker-compose.yml up -d
 
 down-infra:
-	docker compose --env-file .env -f compose/infra/docker-compose.yml --profile "*" down --remove-orphans
+	docker compose --env-file .env -f compose/infra/docker-compose.yml down --remove-orphans
 
 logs-infra:
 	docker compose --env-file .env -f compose/infra/docker-compose.yml logs -f

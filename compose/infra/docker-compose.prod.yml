@@ -1,0 +1,31 @@
+name: infra
+
+services:
+  traefik:
+    ports:
+      - "80:80"
+
+    volumes:
+      - ${LAB_DIR}/config/traefik/letsencrypt:/letsencrypt
+
+    command:
+      # Let's Encrypt ACME
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=${TRAEFIK_LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+
+      # API & Dashboard
+      - "--api.insecure=false"
+
+    labels:
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+
+  headplane:
+    labels:
+      - "traefik.http.routers.headplane.tls.certresolver=myresolver"
+      - "traefik.http.routers.headplane.middlewares=dashboard-auth@docker"
+
+  headscale:
+    labels:
+      - "traefik.http.routers.headscale.tls.certresolver=myresolver"
