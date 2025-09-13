@@ -26,17 +26,28 @@ def get_compose_files(target: str, env: str):
         file_base = parts[1]
         # Prefer prod if env=prod, fallback to normal
         file_path = folder / f"{file_base}.prod.yml" if env == "prod" else folder / f"{file_base}.yml"
-        if not file_path.exists() and env == "prod":
+        
+        base_file_path = None
+        
+        if env == "prod":
             # fallback to dev file
-            file_path = folder / f"{file_base}.yml"
+            base_file_path = folder / f"{file_base}.yml"
+            
+            if not base_file_path.exists():
+                print(f'Error: prod compose file {file_path} does not exist')
+            
         if not file_path.exists():
             print(f"Error: Compose file {file_path} does not exist")
             sys.exit(1)
+            
+        if base_file_path:
+            return [base_file_path, file_path]
+            
         return [file_path]
 
     # User specified the whole folder -> all files
     if env == "prod":
-        files = list(folder.glob("*.prod.yml"))
+        files = list(folder.glob("*.yml"))
         if not files:
             print(f"No prod compose files found in {folder}")
             sys.exit(1)
@@ -48,7 +59,7 @@ def get_compose_files(target: str, env: str):
 
     return files
 
-def run_compose(action: str, target: str, env: str):
+def run_compose(action: str, target: str, env: str, dry: bool):
     files = get_compose_files(target, env)
     env_file = ENV_FILE_PROD if env == "prod" else ENV_FILE
 
@@ -65,6 +76,12 @@ def run_compose(action: str, target: str, env: str):
     elif action == 'down':
         cmd.append("--remove-orphans")
 
+    if dry:
+        cmd = " ".join(cmd)
+        print(f"Command to execute: ")
+        print(cmd)
+        return
+        
     print("Running:", " ".join(cmd))
     
     try:
@@ -79,6 +96,11 @@ def main():
         'up', 'down', 'ps', 'logs'
     ]
     
+    dry = True if '--dry' in sys.argv else False
+    
+    if '--dry' in sys.argv:
+        sys.argv.remove('--dry')
+    
     if len(sys.argv) < 3 or sys.argv[1] not in valid_commands:
         print("Usage: python compose.py [up|down] <target> [prod]")
         print("Examples:")
@@ -89,12 +111,12 @@ def main():
         print("  python compose.py up services/whoami")
         
         sys.exit(1)
-
+        
     action = sys.argv[1]
     target = sys.argv[2]
     env = sys.argv[3] if len(sys.argv) > 3 else "dev"
 
-    run_compose(action, target, env)
+    run_compose(action, target, env, dry)
 
 if __name__ == "__main__":
     main()
