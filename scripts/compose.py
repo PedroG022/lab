@@ -48,9 +48,13 @@ def get_compose_files(target: str, env: str):
     # User specified the whole folder -> all files
     if env == "prod":
         files = list(folder.glob("*.yml"))
+        
         if not files:
             print(f"No prod compose files found in {folder}")
             sys.exit(1)
+            
+        files.sort()
+        files.reverse()
     else:
         files = [f for f in folder.glob("*.yml") if not f.name.endswith(".prod.yml")]
         if not files:
