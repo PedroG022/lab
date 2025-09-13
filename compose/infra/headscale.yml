@@ -1,0 +1,85 @@
+name: "headscale"
+
+services:
+  headscale:
+    container_name: headscale
+    image: docker.io/headscale/headscale:${HEADSCALE_VERSION}
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    networks:
+      - proxy
+
+    volumes:
+      - ${LAB_DIR}/config/headscale/config:/etc/headscale
+      - ${LAB_DIR}/config/headscale/lib:/var/lib/headscale
+      - ${LAB_DIR}/config/headscale/run:/var/run/headscale
+
+    command: serve
+
+    labels:
+      - "glance.name=Headscale"
+      - "glance.icon=di:headscale"
+      - "glance.parent=headplane"
+      - "glance.description=Headscale"
+      - "glance.category=infra"
+
+      - "me.tale.headplane.target=headscale"
+
+      - "traefik.enable=true"
+      - "traefik.http.services.headscale.loadbalancer.server.port=8080"
+      - "traefik.http.routers.headscale.rule=Host(`headscale.${HOST_DOMAIN}`)"
+      - "traefik.http.routers.headscale.entrypoints=websecure"
+      - "traefik.http.routers.headscale.tls=true"
+
+    healthcheck:
+      test: ["CMD", "headscale", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  headplane:
+    container_name: headplane
+    image: ghcr.io/tale/headplane:${HEADPLANE_VERSION}
+    restart: unless-stopped
+
+    networks:
+      - proxy
+
+    volumes:
+      - "${LAB_DIR}/config/headplane/config.yaml:/etc/headplane/config.yaml"
+      - "${LAB_DIR}/config/headscale/config/config.yaml:/etc/headscale/config.yaml"
+
+      # If using dns.extra_records in Headscale (recommended), this should
+      # match the headscale.dns_records_path in your config.yaml
+      # - './headscale-config/dns_records.json:/etc/headscale/dns_records.json'
+
+      # Headplane stores its data in this directory
+      - "${LAB_DIR}/config/headplane/headplane-data:/var/lib/headplane"
+      # If you are using the Docker integration, mount the Docker socket
+      # - '/var/run/docker.sock:/var/run/docker.sock:ro'
+
+    labels:
+      - "glance.name=Headplane"
+      - "glance.id=headplane"
+      - "glance.icon=si:headlessui"
+      - "glance.url=https://headplane.${HOST_DOMAIN}/admin"
+      - "glance.description=Headplane"
+      - "glance.category=infra"
+
+      - "traefik.enable=true"
+
+      - "traefik.http.services.headplane.loadbalancer.server.port=3000"
+      - "traefik.http.routers.headplane.rule=Host(`headplane.${HOST_DOMAIN}`)"
+      - "traefik.http.routers.headplane.entrypoints=websecure"
+      - "traefik.http.routers.headplane.tls=true"
+
+    depends_on:
+      headscale:
+        condition: service_healthy
+
+networks:
+  proxy:
+    external: true

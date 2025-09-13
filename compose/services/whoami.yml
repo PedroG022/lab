@@ -21,3 +21,9 @@ services:
 
       # Middleware
       - "traefik.http.routers.whoami.middlewares=dashboard-auth@docker"
+
+
+networks:
+  proxy:
+    external: true
+    

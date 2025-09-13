@@ -1,0 +1,11 @@
+name: "headscale-prod"
+
+services:
+  headscale:
+    labels:
+      - "traefik.http.routers.headscale.tls.certresolver=myresolver"
+
+  headplane:
+    labels:
+      - "traefik.http.routers.headplane.tls.certresolver=myresolver"
+      - "traefik.http.routers.headplane.middlewares=dashboard-auth@docker"

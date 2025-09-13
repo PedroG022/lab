@@ -37,3 +37,7 @@ services:
       - "traefik.http.routers.adguard-setup.tls=true"
 
       - "traefik.http.services.adguard-setup.loadbalancer.server.port=3000"
+
+networks:
+  proxy:
+    external: true

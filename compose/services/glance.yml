@@ -25,3 +25,7 @@ services:
       - "traefik.http.routers.glance.rule=Host(`dash.${HOST_DOMAIN}`)"
       - "traefik.http.routers.glance.entrypoints=websecure"
       - "traefik.http.routers.glance.tls=true"
+      
+networks:
+  proxy:
+    external: true
