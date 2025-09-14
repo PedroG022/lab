@@ -24,7 +24,7 @@ services:
       - "glance.description=Network-wide ad blocking"
       - "glance.category=infra"
 
-      - "traefik.enable=true"
+      - "traefik.enable=${ADGUARD_TRAEFIK_ENABLED}"
 
       - "traefik.http.routers.adguard.rule=Host(`adguard.${HOST_DOMAIN}`)"
       - "traefik.http.routers.adguard.entrypoints=websecure"
