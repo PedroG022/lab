@@ -97,7 +97,7 @@ def run_compose(action: str, target: str, env: str, dry: bool):
 
 def main():
     valid_commands = [
-        'up', 'down', 'ps', 'logs'
+        'up', 'down', 'ps', 'logs', 'restart'
     ]
     
     dry = True if '--dry' in sys.argv else False
@@ -106,7 +106,7 @@ def main():
         sys.argv.remove('--dry')
     
     if len(sys.argv) < 3 or sys.argv[1] not in valid_commands:
-        print("Usage: python compose.py [up|down] <target> [prod]")
+        print("Usage: python compose.py [up|down|ps|logs|restart] <target> [prod]")
         print("Examples:")
         print("  python compose.py up infra")
         print("  python compose.py up infra prod")
@@ -120,7 +120,12 @@ def main():
     target = sys.argv[2]
     env = sys.argv[3] if len(sys.argv) > 3 else "dev"
 
-    run_compose(action, target, env, dry)
+    if action == 'restart':
+        run_compose('down', target, env, dry)
+        run_compose('up', target, env, dry)
+    else:
+        run_compose(action, target, env, dry)
+        
 
 if __name__ == "__main__":
     main()
