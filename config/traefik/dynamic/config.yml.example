@@ -1,0 +1,15 @@
+http:
+  routers:
+    my-service:
+      rule: "Host(`myservice.mydomain.com`)"
+      entryPoints:
+        - websecure
+      service: my-service
+      tls:
+        certResolver: myresolver
+
+  services:
+    my-service:
+      loadBalancer:
+        servers:
+          - url: "http://myinternalservice:8000"

@@ -1,22 +1,7 @@
-name: "adguard"
+name: "adguard-prod"
 
 services:
   adguardhome:
-    image: adguard/adguardhome
-    container_name: adguardhome
-    restart: unless-stopped
-
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-
-    networks:
-      - proxy
-
-    volumes:
-      - ${LAB_DIR}/config/adguard/workdir:/opt/adguardhome/work
-      - ${LAB_DIR}/config/adguard/confdir:/opt/adguardhome/conf
-
     labels:
       - "glance.name=AdGuard Home"
       - "glance.icon=si:adguard"
@@ -32,6 +17,4 @@ services:
 
       - "traefik.http.services.adguard.loadbalancer.server.port=80"
 
-networks:
-  proxy:
-    external: true
+      - "traefik.http.routers.adguard.tls.certresolver=myresolver"

@@ -36,5 +36,6 @@ config/traefik/letsencrypt/
 
 
 *.env
+*.env.prod
 
 AdguardHome.yaml
