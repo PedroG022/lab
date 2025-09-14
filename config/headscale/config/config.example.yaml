@@ -10,7 +10,7 @@
 #
 # https://myheadscale.example.com:443
 #
-server_url: http://headscale.localhost
+server_url: https://headscale.${HOST_DOMAIN}
 
 # Address to listen to / bind to on the server
 #
@@ -168,7 +168,6 @@ database:
     # https://www.sqlite.org/c3ref/wal_autocheckpoint.html
     # Set to 0 to disable automatic checkpointing.
     wal_autocheckpoint: 1000
-
   # # Postgres config
   # Please note that using Postgres is highly discouraged as it is only supported for legacy reasons.
   # See database.type for more information.
@@ -187,14 +186,14 @@ database:
   #   # in the 'ssl' field. Refers to https://www.postgresql.org/docs/current/libpq-ssl.html Table 34.1.
   #   ssl: false
 
-### TLS configuration
-#
-## Let's encrypt / ACME
-#
-# headscale supports automatically requesting and setting up
-# TLS for a domain with Let's Encrypt.
-#
-# URL to ACME directory
+  ### TLS configuration
+  #
+  ## Let's encrypt / ACME
+  #
+  # headscale supports automatically requesting and setting up
+  # TLS for a domain with Let's Encrypt.
+  #
+  # URL to ACME directory
 acme_url: https://acme-v02.api.letsencrypt.org/directory
 
 # Email to register with ACME provider
@@ -268,26 +267,16 @@ dns:
   # `base_domain` must be a FQDN, without the trailing dot.
   # The FQDN of the hosts will be
   # `hostname.base_domain` (e.g., _myhost.example.com_).
-  base_domain: example.com
+  base_domain: ${TAILNET_NAME}.ts
 
   # Whether to use the local DNS settings of a node (default) or override the
   # local DNS settings and force the use of Headscale's DNS configuration.
-  override_local_dns: false
+  override_local_dns: true
 
   # List of DNS servers to expose to clients.
   nameservers:
     global:
-      - 1.1.1.1
-      - 1.0.0.1
-      - 2606:4700:4700::1111
-      - 2606:4700:4700::1001
-
-      # NextDNS (see https://tailscale.com/kb/1218/nextdns/).
-      # "abc123" is example NextDNS ID, replace with yours.
-      # - https://dns.nextdns.io/abc123
-
-    # Split DNS (see https://tailscale.com/kb/1054/dns/),
-    # a map of domains and which DNS server to use for each.
+      - ${DNS_SERVER_ADDRESS}
     split:
       {}
       # foo.bar.com:
@@ -315,8 +304,8 @@ dns:
   # Headscale processes this file on each change.
   # extra_records_path: /var/lib/headscale/extra-records.json
 
-# Unix socket used for the CLI to connect without authentication
-# Note: for production you will want to set this to something like:
+  # Unix socket used for the CLI to connect without authentication
+  # Note: for production you will want to set this to something like:
 unix_socket: /var/run/headscale/headscale.sock
 unix_socket_permission: "0770"
 #

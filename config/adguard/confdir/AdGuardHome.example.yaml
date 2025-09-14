@@ -2,11 +2,11 @@ http:
   pprof:
     port: 6060
     enabled: false
-  address: 0.0.0.0:8081
+  address: 0.0.0.0:80
   session_ttl: 720h
 users:
-  - name: <username>
-    password: <password>
+  - name: ${ADGUARD_USER}
+    password: ${ADGUARD_PASSWORD}
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
@@ -178,4 +178,4 @@ os:
   group: ""
   user: ""
   rlimit_nofile: 0
-schema_version: 29
+schema_version: 30

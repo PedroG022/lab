@@ -5,7 +5,7 @@ server:
 
   # The secret used to encode and decode web sessions
   # Ensure that this is exactly 32 characters long
-  cookie_secret: "<change_me_to_something_secure!>"
+  cookie_secret: "${HEADSCALE_COOKIE_SECRET}"
 
   # Should the cookies only work over HTTPS?
   # Set to false if running via HTTP without a proxy
@@ -20,7 +20,7 @@ headscale:
   # (THIS IS NOT the gRPC endpoint, but the HTTP endpoint)
   #
   # IMPORTANT: If you are using TLS this MUST be set to `https://`
-  url: "http://headscale:8080"
+  url: "https://headscale.${HOST_DOMAIN}"
 
   # If you use the TLS configuration in Headscale, and you are not using
   # Let's Encrypt for your certificate, pass in the path to the certificate.
@@ -59,12 +59,13 @@ integration:
     # This allows the UI to display version, OS, and connectivity data
     # You will see the Headplane agent in your Tailnet as a node when
     # it connects.
-    enabled: false
+    enabled: ${HEADSCALE_AGENT_ENABLED}
     # To connect to your Tailnet, you need to generate a pre-auth key
     # This can be done via the web UI or through the `headscale` CLI.
-    pre_authkey: "<your-preauth-key>"
+    pre_authkey: ${HEADSCALE_AGENT_PRE_AUTHKEY}
+
     # Optionally change the name of the agent in the Tailnet.
-    # host_name: "headplane-agent"
+    host_name: ${HEASCALE_AGENT_NAME}
 
     # Configure different caching settings. By default, the agent will store
     # caches in the path below for a maximum of 1 minute. If you want data
