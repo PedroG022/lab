@@ -1,0 +1,34 @@
+services:
+  upsnap:
+    image: ghcr.io/seriousm4x/upsnap:5
+    container_name: upsnap
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ${LAB_DIR}/config/upsnap/:/app/pb_data
+    environment:
+      - UPSNAP_SCAN_RANGE=192.168.1.0/24
+    entrypoint: /bin/sh -c "./upsnap serve --http 172.17.0.1:8090" # Docker bind, test later
+
+  upsnap-proxy:
+    image: nginx:alpine
+    container_name: upsnap-proxy
+    restart: unless-stopped
+    networks:
+      - proxy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - upsnap
+    volumes:
+      - ${LAB_DIR}/config/upsnap/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.upsnap.rule=Host(`upsnap.${HOST_DOMAIN}`)"
+      - "traefik.http.routers.upsnap.entrypoints=websecure"
+      - "traefik.http.routers.upsnap.tls=true"
+      - "traefik.http.services.upsnap.loadbalancer.server.port=80"
+
+networks:
+  proxy:
+    external: true

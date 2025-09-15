@@ -16,9 +16,6 @@ services:
       - "traefik.http.routers.whoami.rule=Host(`whoami.${HOST_DOMAIN}`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
 
-      # Enable TLS via Let's Encrypt resolver
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
-
       # Middleware
       - "traefik.http.routers.whoami.middlewares=dashboard-auth@docker"
 
