@@ -9,7 +9,11 @@ services:
     security_opt:
       - no-new-privileges:true
 
+    environment:
+      - SSL_CERT_FILE=/etc/ssl/certs/root_ca.crt
+
     ports:
+      - "80:80"
       - "443:443"
 
     networks:
@@ -19,6 +23,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${LAB_DIR}/config/traefik/certs/:/certs:ro
       - ${LAB_DIR}/config/traefik/dynamic:/dynamic:ro
+      - ${LAB_DIR}/config/traefik/letsencrypt:/letsencrypt
+      - ${LAB_DIR}/config/step-ca/certs/root_ca.crt:/etc/ssl/certs/root_ca.crt:ro
 
     command:
       # EntryPoints
@@ -30,6 +36,12 @@ services:
 
       # TLS
       - "--entrypoints.websecure.http.tls=true"
+
+      # Local TLS
+      - "--certificatesresolvers.stepca.acme.caServer=https://step-ca:9000/acme/acme/directory"
+      - "--certificatesresolvers.stepca.acme.email=admin@example.com"
+      - "--certificatesresolvers.stepca.acme.storage=/letsencrypt/acme-stepca.json"
+      - "--certificatesresolvers.stepca.acme.tlschallenge=true"
 
       # Providers
       - "--providers.docker=true"

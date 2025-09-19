@@ -1,0 +1,24 @@
+services:
+  step-ca:
+    image: smallstep/step-ca:latest
+    container_name: step-ca
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:9000:9000"
+
+    volumes:
+      - ${LAB_DIR}/config/step-ca:/home/step/
+
+    networks:
+      - proxy
+
+    environment:
+      - DOCKER_STEPCA_INIT_NAME=Smallstep
+      - DOCKER_STEPCA_INIT_DNS_NAMES=localhost,step-ca # Add local machine hostname, inside tailnet
+      - DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT=true
+      - DOCKER_STEPCA_INIT_ACME=true
+
+networks:
+  proxy:
+    external: true

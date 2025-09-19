@@ -34,9 +34,9 @@ config/headscale/config/config.yaml
 config/headplane/config.yaml
 config/headplane/headplane-data/
 
-
 config/upsnap/
 
+config/step-ca/
 
 *.env
 *.env.prod
