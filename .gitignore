@@ -19,6 +19,7 @@ Icon?
 
 # Docker volumes / container data
 config/adguard/workdir/*
+config/adguard/confdir/*
 
 # Traefik certificates
 config/traefik/certs/
