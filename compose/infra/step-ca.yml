@@ -13,11 +13,13 @@ services:
     networks:
       - proxy
 
-    environment:
-      - DOCKER_STEPCA_INIT_NAME=Smallstep
-      - DOCKER_STEPCA_INIT_DNS_NAMES=localhost,step-ca # Add local machine hostname, inside tailnet
-      - DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT=true
-      - DOCKER_STEPCA_INIT_ACME=true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.step-ca.loadbalancer.server.port=9000"
+      - "traefik.http.routers.step-ca.rule=Host(`step-ca.${HOST_DOMAIN}`)"
+      - "traefik.http.routers.step-ca.entrypoints=websecure"
+      - "traefik.http.services.step-ca.loadbalancer.server.scheme=https"
+      - "traefik.http.routers.step-ca.tls.certresolver=stepca"
 
 networks:
   proxy:
