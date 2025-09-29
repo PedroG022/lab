@@ -38,7 +38,7 @@ services:
       - "--entrypoints.websecure.http.tls=true"
 
       # Local TLS
-      - "--certificatesresolvers.stepca.acme.caServer=https://step-ca:9000/acme/acme/directory"
+      - "--certificatesresolvers.stepca.acme.caServer=https://${STEP_CA_HOST}/acme/acme/directory"
       - "--certificatesresolvers.stepca.acme.email=admin@example.com"
       - "--certificatesresolvers.stepca.acme.storage=/letsencrypt/acme-stepca.json"
       - "--certificatesresolvers.stepca.acme.tlschallenge=true"
